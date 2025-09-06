@@ -51,6 +51,33 @@ class DockerService:
         """Check if Docker is available"""
         return self.client is not None or self.use_subprocess
 
+    def _format_ports(self, ports: List[Dict]) -> List[str]:
+        """Format Docker ports for frontend display"""
+        formatted_ports = []
+        for port in ports:
+            # Handle different port formats from Docker API
+            if isinstance(port, dict):
+                # Format: {"IP": "0.0.0.0", "PrivatePort": 80, "PublicPort": 8080, "Type": "tcp"}
+                if port.get("PublicPort") and port.get("PrivatePort"):
+                    formatted_ports.append(f"{port['PublicPort']}:{port['PrivatePort']}")
+                # Format: {"PrivatePort": 80, "Type": "tcp"} (no public port)
+                elif port.get("PrivatePort"):
+                    formatted_ports.append(f"{port['PrivatePort']}:{port['PrivatePort']}")
+            elif isinstance(port, str):
+                # Format: "80/tcp" or "0.0.0.0:8080->80/tcp"
+                if "->" in port:
+                    # Extract from "0.0.0.0:8080->80/tcp" format
+                    parts = port.split("->")
+                    if len(parts) == 2:
+                        public_part = parts[0].split(":")[-1]  # Get port from "0.0.0.0:8080"
+                        private_part = parts[1].split("/")[0]  # Get port from "80/tcp"
+                        formatted_ports.append(f"{public_part}:{private_part}")
+                else:
+                    # Format: "80/tcp" (no public port)
+                    port_num = port.split("/")[0]
+                    formatted_ports.append(f"{port_num}:{port_num}")
+        return formatted_ports
+
     def list_containers(self, all_containers: bool = False) -> List[Dict]:
         """List all containers"""
         if not self.is_available():
@@ -60,26 +87,30 @@ class DockerService:
             if self.client:
                 # Use Docker SDK
                 containers = self.client.containers(all=all_containers)
-                return [
-                    {
-                        "id": container["Id"],
+                result_containers = []
+                for container in containers:
+                    container_id = container["Id"]
+                    # Get detailed port information
+                    ports = self.get_container_ports(container_id)
+                    
+                    result_containers.append({
+                        "id": container_id,
                         "name": (
                             container["Names"][0][1:]
                             if container["Names"]
-                            else container["Id"][:12]
+                            else container_id[:12]
                         ),
                         "image": container["Image"],
                         "status": container["State"],
                         "state": container,
                         "labels": container.get("Labels", {}),
-                        "ports": container.get("Ports", []),
+                        "ports": ports,
                         "created": container["Created"],
-                    }
-                    for container in containers
-                ]
+                    })
+                return result_containers
             elif self.use_subprocess:
-                # Use subprocess
-                cmd = ["docker", "ps", "--format", "json"]
+                # Use subprocess with better port information
+                cmd = ["docker", "ps", "--format", "table {{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"]
                 if all_containers:
                     cmd.append("-a")
 
@@ -89,27 +120,113 @@ class DockerService:
                     return []
 
                 containers = []
-                for line in result.stdout.strip().split("\n"):
-                    if line:
-                        try:
-                            container = json.loads(line)
+                lines = result.stdout.strip().split("\n")
+                if len(lines) <= 1:  # Only header or empty
+                    return containers
+                
+                # Skip header line
+                for line in lines[1:]:
+                    if line.strip():
+                        parts = line.split("\t")
+                        if len(parts) >= 5:
+                            container_id = parts[0]
+                            name = parts[1]
+                            image = parts[2]
+                            status = parts[3]
+                            ports_str = parts[4] if len(parts) > 4 else ""
+                            
+                            # Parse ports from string format like "0.0.0.0:8080->80/tcp, 0.0.0.0:8443->443/tcp"
+                            ports = []
+                            if ports_str and ports_str != "<none>":
+                                port_parts = ports_str.split(", ")
+                                for port_part in port_parts:
+                                    if "->" in port_part:
+                                        # Format: "0.0.0.0:8080->80/tcp"
+                                        parts = port_part.split("->")
+                                        if len(parts) == 2:
+                                            public_part = parts[0].split(":")[-1]
+                                            private_part = parts[1].split("/")[0]
+                                            ports.append(f"{public_part}:{private_part}")
+                                    elif "/" in port_part:
+                                        # Format: "80/tcp" (no public port)
+                                        port_num = port_part.split("/")[0]
+                                        ports.append(f"{port_num}:{port_num}")
+                            
+                            # Get detailed port information using docker inspect
+                            detailed_ports = self.get_container_ports(container_id)
+                            
                             containers.append(
                                 {
-                                    "id": container["ID"],
-                                    "name": container["Names"],
-                                    "image": container["Image"],
-                                    "status": container["State"],
-                                    "state": container,
+                                    "id": container_id,
+                                    "name": name,
+                                    "image": image,
+                                    "status": status.lower(),
+                                    "state": {"Status": status},
                                     "labels": {},
-                                    "ports": [],
-                                    "created": container.get("CreatedAt", ""),
+                                    "ports": detailed_ports if detailed_ports else ports,
+                                    "created": "",
                                 }
                             )
-                        except json.JSONDecodeError:
-                            continue
                 return containers
         except Exception as e:
             logger.error(f"Error listing containers: {e}")
+            return []
+
+    def get_container_ports(self, container_id: str) -> List[str]:
+        """Get detailed port information for a specific container"""
+        if not self.is_available():
+            return []
+        
+        try:
+            if self.client:
+                # Use Docker SDK
+                container_info = self.client.inspect_container(container_id)
+                network_settings = container_info.get("NetworkSettings", {})
+                ports = network_settings.get("Ports", {})
+                
+                formatted_ports = []
+                for container_port, host_bindings in ports.items():
+                    if host_bindings:
+                        for binding in host_bindings:
+                            host_port = binding.get("HostPort")
+                            if host_port:
+                                container_port_num = container_port.split("/")[0]
+                                formatted_ports.append(f"{host_port}:{container_port_num}")
+                    else:
+                        # No host binding, just container port
+                        container_port_num = container_port.split("/")[0]
+                        formatted_ports.append(f"{container_port_num}:{container_port_num}")
+                
+                return formatted_ports
+            elif self.use_subprocess:
+                # Use subprocess with docker inspect
+                cmd = ["docker", "inspect", container_id, "--format", "{{json .NetworkSettings.Ports}}"]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+                
+                if result.returncode == 0:
+                    try:
+                        ports_data = json.loads(result.stdout.strip())
+                        formatted_ports = []
+                        
+                        for container_port, host_bindings in ports_data.items():
+                            if host_bindings:
+                                for binding in host_bindings:
+                                    host_port = binding.get("HostPort")
+                                    if host_port:
+                                        container_port_num = container_port.split("/")[0]
+                                        formatted_ports.append(f"{host_port}:{container_port_num}")
+                            else:
+                                # No host binding
+                                container_port_num = container_port.split("/")[0]
+                                formatted_ports.append(f"{container_port_num}:{container_port_num}")
+                        
+                        return formatted_ports
+                    except json.JSONDecodeError:
+                        pass
+                
+                return []
+        except Exception as e:
+            logger.error(f"Error getting container ports for {container_id}: {e}")
             return []
 
     def get_container_info(self, container_name: str) -> Optional[Dict]:

@@ -123,9 +123,17 @@ export interface MetricsSummary {
   total_cpu_usage: number;
 }
 
+export interface Container {
+  id: string;
+  name: string;
+  image: string;
+  status: string;
+  ports?: string[];
+}
+
 export interface LiveMetrics {
   server: Partial<ServerMetrics>;
   docker: DockerMetrics[];
-  containers: any[];
+  containers: Container[];
   timestamp: string;
 }

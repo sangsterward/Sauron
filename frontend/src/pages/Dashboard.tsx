@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react'
-import { useServiceStats, useServices } from '@/hooks/useServices'
-import { useEventsStore } from '@/store/events'
+import { useServiceStats } from '@/hooks/useServices'
+import { useServerMetrics, useLiveMetrics, useCollectServerMetrics } from '@/hooks/useMetrics'
 import { wsClient } from '@/lib/websocket'
 import StatsCard from '@/components/StatsCard'
-import ServiceCard from '@/components/ServiceCard'
-import EventTimeline from '@/components/EventTimeline'
 import ServiceDetails from '@/components/ServiceDetails'
+import LiveUsageChart from '@/components/LiveUsageChart'
+import ContainerPortMapping from '@/components/ContainerPortMapping'
 import { Service, WebSocketMessage } from '@/types'
+import { Activity, RefreshCw } from 'lucide-react'
 
 const Dashboard: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useServiceStats()
-  const { data: services, isLoading: servicesLoading } = useServices()
-  const { addEvent } = useEventsStore()
+  const { data: serverMetrics, isLoading: metricsLoading } = useServerMetrics(1) // Last hour
+  const { data: liveMetrics, isLoading: liveLoading } = useLiveMetrics()
+  const collectServerMetrics = useCollectServerMetrics()
   const [selectedService, setSelectedService] = useState<Service | null>(null)
 
   useEffect(() => {
@@ -26,31 +28,25 @@ const Dashboard: React.FC = () => {
       }
     })
 
-    // Connect to events WebSocket
-    wsClient.connect('/ws/events/', (message: WebSocketMessage) => {
-      if (message.type === 'new_event') {
-        addEvent(message.event)
-      }
-    })
-
     return () => {
       wsClient.disconnect('/ws/services/')
-      wsClient.disconnect('/ws/events/')
     }
-  }, [addEvent])
+  }, [])
 
-  if (statsLoading || servicesLoading) {
+  if (statsLoading || metricsLoading || liveLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div
-          data-cy="loading-spinner"
+          data-testid="loading-spinner"
           className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"
         ></div>
       </div>
     )
   }
 
-  const recentServices = services?.slice(0, 6) || []
+  const handleCollectMetrics = () => {
+    collectServerMetrics.mutate()
+  }
 
   return (
     <div>
@@ -84,30 +80,39 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Services Overview */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Recent Services
+      {/* Live Usage Chart */}
+      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+            <Activity className="h-5 w-5 text-blue-600" />
+            <span>Live System Usage</span>
           </h3>
-          <div className="space-y-4">
-            {recentServices.map((service: Service) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                onViewDetails={setSelectedService}
-              />
-            ))}
-          </div>
+          <button
+            onClick={handleCollectMetrics}
+            disabled={collectServerMetrics.isPending}
+            className="btn btn-primary flex items-center space-x-2"
+            data-testid="collect-metrics-button"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${
+                collectServerMetrics.isPending ? 'animate-spin' : ''
+              }`}
+            />
+            <span>Refresh</span>
+          </button>
         </div>
+        <LiveUsageChart 
+          data={serverMetrics || []} 
+          height={300}
+        />
+      </div>
 
-        {/* Event Timeline */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Recent Events
-          </h3>
-          <EventTimeline />
-        </div>
+      {/* Container Port Mapping */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Active Container Port Mappings
+        </h3>
+        <ContainerPortMapping containers={liveMetrics?.containers || []} />
       </div>
 
       {selectedService && (
