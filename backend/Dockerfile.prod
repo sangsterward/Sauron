@@ -32,6 +32,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY . .
 
+# Collect static files
+RUN python manage.py collectstatic --noinput
+
 RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
 
