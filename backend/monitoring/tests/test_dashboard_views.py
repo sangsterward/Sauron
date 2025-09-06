@@ -45,7 +45,8 @@ class DashboardViewsTestCase(APITestCase):
         self.assertEqual(response.data[0]['memory_percent'], 60.2)
 
     @patch('monitoring.views.metrics_collector')
-    def test_server_metrics_collect(self, mock_collector):
+    @patch('monitoring.views.event_broadcaster')
+    def test_server_metrics_collect(self, mock_broadcaster, mock_collector):
         """Test collecting new server metrics"""
         mock_collector.collect_server_metrics.return_value = {
             'cpu_percent': 30.0,
@@ -69,6 +70,9 @@ class DashboardViewsTestCase(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['cpu_percent'], 25.5)
+        
+        # Verify WebSocket broadcast was called
+        mock_broadcaster.broadcast_metrics_update.assert_called_once()
 
     def test_metrics_summary(self):
         """Test getting metrics summary"""

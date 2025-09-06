@@ -21,7 +21,11 @@ vi.mock('@/hooks/useMetrics', () => ({
 // Mock WebSocket client
 vi.mock('@/lib/websocket', () => ({
   wsClient: {
-    connect: vi.fn(),
+    connect: vi.fn(() => ({
+      readyState: WebSocket.OPEN,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
     disconnect: vi.fn(),
   },
 }))
@@ -52,6 +56,8 @@ vi.mock('lucide-react', () => ({
   XCircle: () => <div data-testid="x-circle-icon" />,
   Layers: () => <div data-testid="layers-icon" />,
   AlertTriangle: () => <div data-testid="alert-triangle-icon" />,
+  Wifi: () => <div data-testid="wifi-icon" />,
+  WifiOff: () => <div data-testid="wifi-off-icon" />,
 }))
 
 const renderWithRouter = (component: React.ReactElement) => {
@@ -154,12 +160,12 @@ describe('Dashboard', () => {
     expect(screen.getByText('Active Container Port Mappings')).toBeInTheDocument()
   })
 
-  it('shows refresh button for metrics', () => {
+  it('shows collect metrics button', () => {
     renderWithRouter(<Dashboard />)
     
-    const refreshButton = screen.getByTestId('collect-metrics-button')
-    expect(refreshButton).toBeInTheDocument()
-    expect(screen.getByText('Refresh')).toBeInTheDocument()
+    const collectButton = screen.getByTestId('collect-metrics-button')
+    expect(collectButton).toBeInTheDocument()
+    expect(screen.getByText('Collect Metrics')).toBeInTheDocument()
   })
 
   it('calls collect metrics when refresh button is clicked', async () => {

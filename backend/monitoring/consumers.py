@@ -7,7 +7,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
 from events.models import Event
 from services.models import Service
-from .services.docker_service import docker_service
+from services.docker_service import docker_service
 
 logger = logging.getLogger(__name__)
 
