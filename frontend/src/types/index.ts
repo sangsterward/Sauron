@@ -80,3 +80,52 @@ export interface ServiceStats {
   unhealthy_services: number;
   service_types: Record<string, number>;
 }
+
+export interface ServerMetrics {
+  id: number;
+  timestamp: string;
+  cpu_percent: number;
+  memory_percent: number;
+  memory_used_mb: number;
+  memory_total_mb: number;
+  disk_percent: number;
+  disk_used_gb: number;
+  disk_total_gb: number;
+  network_rx_mb: number;
+  network_tx_mb: number;
+  load_average_1m: number;
+  load_average_5m: number;
+  load_average_15m: number;
+}
+
+export interface DockerMetrics {
+  id: number;
+  container_id: string;
+  container_name: string;
+  timestamp: string;
+  cpu_percent: number;
+  memory_usage_mb: number;
+  memory_limit_mb: number;
+  network_rx_mb: number;
+  network_tx_mb: number;
+  block_read_mb: number;
+  block_write_mb: number;
+}
+
+export interface MetricsSummary {
+  current_cpu: number;
+  current_memory: number;
+  current_disk: number;
+  current_load: number;
+  total_containers: number;
+  running_containers: number;
+  total_memory_usage: number;
+  total_cpu_usage: number;
+}
+
+export interface LiveMetrics {
+  server: Partial<ServerMetrics>;
+  docker: DockerMetrics[];
+  containers: any[];
+  timestamp: string;
+}

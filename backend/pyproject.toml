@@ -16,6 +16,7 @@ celery = "^5.3"
 uvicorn = "^0.24"
 docker = "^6.1"
 requests = "^2.31"
+psutil = "^5.9"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4"

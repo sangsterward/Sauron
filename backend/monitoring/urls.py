@@ -18,4 +18,24 @@ urlpatterns = [
         views.TestBroadcastView.as_view(),
         name="test-broadcast",
     ),
+    path(
+        "monitoring/server_metrics/",
+        views.ServerMetricsView.as_view(),
+        name="server-metrics",
+    ),
+    path(
+        "monitoring/docker_metrics/",
+        views.DockerMetricsView.as_view(),
+        name="docker-metrics",
+    ),
+    path(
+        "monitoring/summary/",
+        views.MetricsSummaryView.as_view(),
+        name="metrics-summary",
+    ),
+    path(
+        "monitoring/live/",
+        views.LiveMetricsView.as_view(),
+        name="live-metrics",
+    ),
 ]

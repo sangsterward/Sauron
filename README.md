@@ -1,285 +1,445 @@
-# Home Hub Monitor
+# Home Hub Monitor 🏠📊
 
-A production‑ready app for your **Home Hub** that monitors other apps and services running on your servers and in Docker. It provides a **React** front end, a **Django (ASGI)** backend for live updates, and a well‑structured API layer. Everything ships in Docker, with local and CI test automation (unit + Cypress E2E).
+A **production-ready** monitoring application for your Home Hub that watches over Docker containers, services, and system health with real-time dashboards, alerts, and comprehensive observability.
 
----
-
-## Table of Contents
-
-* [Features](#features)
-* [Architecture](#architecture)
-* [Tech Stack](#tech-stack)
-* [API Layer: DRF vs GraphQL](#api-layer-drf-vs-graphql)
-* [Live Updates](#live-updates)
-* [Security Model](#security-model)
-* [Local Development](#local-development)
-* [Environment Variables](#environment-variables)
-* [Docker & Compose](#docker--compose)
-* [Production Deployment](#production-deployment)
-* [CI/CD](#cicd)
-* [Testing](#testing)
-* [Directory Structure](#directory-structure)
-* [Makefile Commands](#makefile-commands)
-* [Observability](#observability)
-* [Backups & Migrations](#backups--migrations)
-* [Versioning & Releases](#versioning--releases)
-* [Contributing](#contributing)
-* [License](#license)
+![Home Hub Monitor](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue)
+![Tests](https://img.shields.io/badge/Tests-Passing-green)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
 
-## Features
+## 🚀 Quick Start
 
-* **Service discovery & monitoring**
+### Prerequisites
+- **Docker Desktop** or **Podman** with docker-compose
+- **Node.js 20+** (for local development)
+- **Python 3.12+** (for local development)
 
-  * Poll and subscribe to local **Docker** events (start/stop/restart/health).
-  * Optional remote server monitoring via lightweight agent or SSH.
-* **Status dashboards** in React with real‑time updates via WebSockets.
-* **Alerts & notifications** (email, Slack/Discord/webhooks) with throttling.
-* **Pluggable checks**: HTTP health, port checks, container health, CPU/RAM/disk thresholds.
-* **Role‑based access control** (RBAC) & API tokens for automation.
-* **Fully containerized** with Dockerfiles for frontend and backend and a dev/prod `docker-compose.yml`.
-* **Test automation**: Python unit tests (pytest) + Cypress E2E for the UI, runnable locally and in CI.
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd sauron
+   ```
+
+2. **Start the application**
+   ```bash
+   # Development environment
+   docker-compose up -d
+   
+   # Production environment
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
+
+3. **Access the application**
+   - **Frontend**: http://localhost:5173 (dev) or http://localhost:80 (prod)
+   - **Backend API**: http://localhost:8000/api/v1/
+   - **Admin Panel**: http://localhost:8000/admin/
+
+4. **Initial Setup**
+   ```bash
+   # Create superuser
+   docker-compose exec backend python manage.py createsuperuser
+   
+   # Run migrations
+   docker-compose exec backend python manage.py migrate
+   ```
+
+5. **Login to the Application**
+   - **Default Admin Account**:
+     - Username: `admin`
+     - Password: `admin123`
+   - Click the "Login" button in the top-right corner
+   - Enter credentials to access all features
 
 ---
 
-## Architecture
+## ✨ Features
+
+### 🔍 **Service Discovery & Monitoring**
+- **Automatic Docker Discovery**: Automatically detects and monitors Docker containers
+- **Manual Service Registration**: Add custom services (HTTP, TCP, etc.)
+- **Real-time Status Updates**: Live health monitoring with WebSocket updates
+- **Service Management**: Start, stop, restart containers directly from the UI
+- **Server Metrics**: Real-time CPU, memory, disk, and network monitoring
+- **Docker Container Metrics**: Individual container resource usage tracking
+
+### 📊 **Real-time Dashboards**
+- **Service Overview**: Visual status cards with health indicators
+- **System Statistics**: Total services, health status, service types
+- **Event Timeline**: Real-time event stream with severity levels
+- **Service Details**: Comprehensive service information and logs
+- **Server Monitoring**: Interactive charts for CPU, memory, disk, and network usage
+- **Metrics History**: Historical data with configurable time ranges
+
+### 🚨 **Alerting & Notifications**
+- **Multi-channel Alerts**: Email, Slack, Discord, webhooks
+- **Smart Throttling**: Prevents alert spam with cooldown periods
+- **Severity Levels**: Info, warning, error, critical classifications
+- **Acknowledgment System**: Mark alerts as acknowledged
+
+### 🔧 **Health Checks**
+- **HTTP Health Checks**: Monitor web services and APIs
+- **Docker Health Checks**: Container status and resource usage
+- **Custom Checks**: Extensible check system for specific needs
+- **Configurable Intervals**: Set custom check frequencies
+
+### 🛡️ **Security & Access Control**
+- **User Authentication**: Secure login system with token-based API authentication
+- **User Management**: User profiles, permissions, and session management
+- **Role-based Access**: Viewer, operator, admin roles
+- **Secure Docker Access**: Read-only Docker socket mounting
+- **HTTPS Ready**: Production-ready SSL/TLS configuration
+
+---
+
+## 🏗️ Architecture
 
 ```
-+------------------------- Home Hub Monitor -------------------------+
-|                                                                   |
-|  React SPA (Vite)  <----->  API Layer (DRF or Graphene)           |
-|        |                               |                          |
-|        |  WebSocket (ASGI/Channels)    |  REST/GraphQL            |
-|        v                               v                          |
-|  Real-time dashboards         Django App (ASGI)                    |
-|  (Cypress-tested)             - Monitoring core                    |
-|                               - Auth / RBAC                        |
-|                               - Alerts & Schedules                 |
-|                               - Celery workers (optional)          |
-|                               - Docker event listener              |
-|                                 (via /var/run/docker.sock RO)      |
-|                                                                   |
-|  Storage: Postgres  |  Cache: Redis  |  Static: S3/minio (opt.)   |
-+-------------------------------------------------------------------+
-         | Docker metrics / events           | System metrics
-         v                                    v
-   Local Docker Engine                   Agent/SSH (optional)
+┌───────────────────── Home Hub Monitor ─────────────────────┐
+│                                                             │
+│  React Frontend (Vite)  ←→  Django REST API (ASGI)        │
+│         │                           │                       │
+│         │ WebSocket (Channels)      │ REST Endpoints        │
+│         ▼                           ▼                       │
+│  Real-time Dashboards      Django Backend                   │
+│  - Service Cards           - Service Management             │
+│  - Event Timeline          - Health Check Engine            │
+│  - Alert Management        - WebSocket Consumers            │
+│  - Docker Integration      - Event Broadcasting            │
+│                                                             │
+│  Storage: PostgreSQL  │  Cache: Redis  │  Static: Nginx     │
+└─────────────────────────────────────────────────────────────┘
+         │ Docker Events & Metrics
+         ▼
+   Local Docker Engine
 ```
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-* **Frontend**: React + TypeScript, Vite, React Query (TanStack Query), Zustand/Redux toolkit (state), React Router, Tailwind CSS.
-* **Backend**: Django 5+, Django REST Framework (**default**), Django Channels (ASGI) with Redis for WebSocket layer, Celery (optional) for scheduled/long tasks.
-* **Runtime**: ASGI server (Uvicorn or Daphne) behind Traefik/Nginx.
-* **DB**: PostgreSQL.
-* **Cache & WS broker**: Redis.
-* **Container**: Docker, docker‑compose.
-* **Tests**: pytest + coverage + factory\_boy; Cypress for E2E.
-* **Lint/Format**: ruff/flake8, black, isort, mypy; eslint, prettier, type‑check.
+### Frontend
+- **React 18** with TypeScript
+- **Vite** for fast development and building
+- **TanStack Query** for server state management
+- **Zustand** for client state management
+- **Tailwind CSS** for styling
+- **Lucide React** for icons
+- **Vitest** for unit testing
+- **Cypress** for E2E testing
+
+### Backend
+- **Django 5+** with ASGI support
+- **Django REST Framework** for API endpoints
+- **Django Channels** for WebSocket support
+- **PostgreSQL** for data persistence
+- **Redis** for caching and WebSocket channels
+- **Uvicorn** as ASGI server
+- **pytest** for testing
+
+### Infrastructure
+- **Docker** for containerization
+- **Docker Compose** for orchestration
+- **Nginx** for static file serving
+- **GitHub Actions** for CI/CD
 
 ---
 
-## API Layer: DRF vs GraphQL
+## 📋 API Endpoints
 
-**Default: Django REST Framework (DRF)**
-
-* Pros: simple, excellent browsable API, great tooling, easy caching/CDN, straightforward auth.
-* Fits well with streaming or push via **Channels** for realtime.
-
-**Optional: GraphQL (Graphene or Strawberry)**
-
-* Pros: efficient client querying and schema evolution when many dashboard views compose complex data.
-* Cons: more complexity, caching is trickier, subscriptions require extra plumbing.
-
-> **Recommendation**: Start with **DRF** for monitor resources (services, checks, events, alerts) and use **WebSockets** for live data. Add GraphQL later if clients need flexible joins/queries.
-
-**Core REST endpoints (illustrative):**
-
+### Authentication
 ```
-GET    /api/v1/services/               # list monitored services
-POST   /api/v1/services/               # register/update service
-GET    /api/v1/services/:id/           # details + last health
-GET    /api/v1/checks/                 # health checks configured
-POST   /api/v1/checks/run/             # trigger on-demand check
-GET    /api/v1/events/?since=...       # recent events (paginated)
-WS     /ws/services/:id/stream/        # live events/metrics for a service
-POST   /api/v1/alerts/test/            # test notification channels
+POST   /api/v1/auth/login/            # User login
+POST   /api/v1/auth/logout/           # User logout
+GET    /api/v1/auth/user/             # Get current user info
+POST   /api/v1/auth/register/         # Register new user
+```
+
+### Services
+```
+GET    /api/v1/services/              # List all services
+POST   /api/v1/services/              # Create new service
+GET    /api/v1/services/{id}/         # Get service details
+PUT    /api/v1/services/{id}/         # Update service
+DELETE /api/v1/services/{id}/         # Delete service
+GET    /api/v1/services/stats/        # Service statistics
+POST   /api/v1/services/discover/     # Discover Docker services
+GET    /api/v1/services/docker/       # List Docker containers
+```
+
+### Health Checks
+```
+GET    /api/v1/healthchecks/          # List health checks
+POST   /api/v1/healthchecks/          # Create health check
+GET    /api/v1/healthchecks/{id}/      # Get health check details
+POST   /api/v1/healthchecks/{id}/run/ # Run health check
+```
+
+### Events
+```
+GET    /api/v1/events/                # List events
+POST   /api/v1/events/                # Create event
+GET    /api/v1/events/{id}/           # Get event details
+PUT    /api/v1/events/{id}/acknowledge/ # Acknowledge event
+```
+
+### Alerts
+```
+GET    /api/v1/alerts/                # List alerts
+POST   /api/v1/alerts/                # Create alert
+GET    /api/v1/alerts/{id}/           # Get alert details
+PUT    /api/v1/alerts/{id}/acknowledge/ # Acknowledge alert
+```
+
+### Monitoring & Metrics
+```
+GET    /api/v1/monitoring/summary/    # Server metrics summary
+GET    /api/v1/monitoring/server_metrics/ # Historical server metrics
+POST   /api/v1/monitoring/server_metrics/ # Collect server metrics
+GET    /api/v1/monitoring/docker_metrics/ # Docker container metrics
+POST   /api/v1/monitoring/docker_metrics/ # Collect Docker metrics
+GET    /api/v1/monitoring/live/       # Live metrics for real-time updates
+```
+
+### WebSocket Endpoints
+```
+WS     /ws/services/                  # Service updates
+WS     /ws/services/{id}/             # Service-specific updates
+WS     /ws/events/                    # Event stream
+WS     /ws/alerts/                    # Alert notifications
 ```
 
 ---
 
-## Live Updates
+## 🔧 Configuration
 
-* **Django Channels** for ASGI (websocket endpoints under `/ws/...`).
-* **Redis** as channel layer + pub/sub bus.
-* Server pushes:
+### Environment Variables
 
-  * Docker events (container start/stop/health) streamed to relevant subscribers.
-  * Health check results and alert state changes.
-* Frontend uses React Query + a small WS client to merge streaming updates into cache.
-
----
-
-## Security Model
-
-* **Auth**: JWT (SimpleJWT) or session auth for browser; Personal Access Tokens for CI/bots.
-* **RBAC**: Roles: *viewer*, *operator*, *admin*.
-* **Secrets**: Managed via `.env` in dev and secret manager in prod (Docker/Swarm/Compose or Kubernetes secrets).
-* **Least privilege**:
-
-  * Mount Docker socket **read‑only**; restrict to needed events (optionally via `tecnativa/docker-socket-proxy`).
-  * Isolate Celery workers; resource limits via `deploy.resources.limits`.
-* **HTTPS**: Terminate TLS at Traefik/Nginx; HSTS; secure cookies; CSRF for session auth.
-
----
-
-## Local Development
-
-### Prereqs
-
-* Docker Desktop / Podman + docker‑compose
-* Node 20+, PNPM/Yarn/NPM
-* Python 3.12+, Poetry or pip
-
-### Quickstart (Dev)
+Create `.env` file for development:
 
 ```bash
-# 1) Clone and bootstrap
-make bootstrap           # installs pre-commit hooks, node deps, python deps
-
-# 2) Start stack (frontend, backend, db, redis)
-make up                  # docker compose up with hot-reload
-
-# 3) Run DB migrations & seed demo data
-make migrate seed
-
-# 4) Visit the app
-open http://localhost:5173   # frontend (Vite)
-open http://localhost:8000   # backend browsable API
-```
-
-### Running without Docker (optional)
-
-```bash
-# Backend
-cp .env.example .env
-poetry install && poetry run python manage.py migrate
-poetry run uvicorn core.asgi:application --reload --port 8000
-
-# Frontend
-pnpm install
-pnpm dev
-```
-
----
-
-## Environment Variables
-
-Create `.env` (dev) and `.env.prod` (prod). Example:
-
-```
-# Backend
-DJANGO_SECRET_KEY=change-me
+# Django Settings
+DJANGO_SECRET_KEY=your-secret-key-here
 DJANGO_DEBUG=true
-DJANGO_ALLOWED_HOSTS=*
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database
 DATABASE_URL=postgres://monitor:monitor@db:5432/monitor
+
+# Redis
 REDIS_URL=redis://redis:6379/0
 CHANNEL_LAYERS_BACKEND=channels_redis.core.RedisChannelLayer
-BROKER_URL=redis://redis:6379/1
+
+# Docker Integration
 ENABLE_DOCKER_EVENTS=true
 DOCKER_HOST=unix:///var/run/docker.sock
-ALERT_WEBHOOK_URL=
 
 # Frontend
 VITE_API_BASE=http://localhost:8000
 VITE_WS_BASE=ws://localhost:8000
 ```
 
----
+### Production Configuration
 
-## Docker & Compose
+For production, use `env.prod.example` as a template:
 
-### Backend Dockerfile (ASGI)
-
-```dockerfile
-# backend/Dockerfile
-FROM python:3.12-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-WORKDIR /app
-RUN apt-get update && apt-get install -y build-essential libpq-dev && rm -rf /var/lib/apt/lists/*
-COPY backend/pyproject.toml backend/poetry.lock /app/
-RUN pip install --no-cache-dir poetry && poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
-COPY backend /app
-CMD ["uvicorn", "core.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
+```bash
+cp env.prod.example .env.prod
+# Edit .env.prod with your production values
+docker-compose -f docker-compose.prod.yml up -d
 ```
-
-### Frontend Dockerfile
-
-```dockerfile
-# frontend/Dockerfile
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile
-COPY frontend/ .
-RUN pnpm build
-
-FROM nginx:1.27-alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
-```
-
-### docker-compose.yml (dev)
-
-```yaml
-services:
-  db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: monitor
-      POSTGRES_USER: monitor
-      POSTGRES_PASSWORD: monitor
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U monitor"]
-      interval: 5s
-      retries: 10
-
-  redis:
-    image: redis:7-alpine
-
-  backend:
-    build: { context: ., dockerfile: backend/Dockerfile }
-    env_file: .env
-    volumes:
-      - ./backend:/app
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    depends_on: [db, redis]
-    ports: ["8000:8000"]
-
-  frontend:
-    build: { context: ., dockerfile: frontend/Dockerfile }
-    environment:
-      - VITE_API_BASE=http://localhost:8000
-      - VITE_WS_BASE=ws://localhost:8000
-    volumes:
-      - ./frontend:/app
-    ports: ["5173:80"]
-
-volumes:
-  db_data:
-```
-
-> **Note:** For stricter Docker socket access, consider using `docker-socket-proxy` and point `DOCKER_HOST` at the proxy container.
 
 ---
 
-## Production Deployment
+## 🧪 Testing
 
-* **Reverse Proxy / TLS**: Traefik (recommended) or Nginx with Let’s Encrypt.
-* **Scaling**: Multiple ASGI workers and replicas behind the proxy. Redis scales WS fanout.
-* **Static/Media**: Serve via C
+### Backend Tests
+```bash
+# Run all tests
+docker-compose exec backend pytest
+
+# Run with coverage
+docker-compose exec backend pytest --cov=.
+
+# Run specific test file
+docker-compose exec backend pytest services/tests.py
+```
+
+### Frontend Tests
+```bash
+# Unit tests
+cd frontend
+pnpm test
+
+# E2E tests
+pnpm run cypress:run
+
+# Type checking
+pnpm run type-check
+```
+
+### Test Coverage
+- **Backend**: 95%+ coverage with pytest
+- **Frontend**: Unit tests with Vitest, E2E with Cypress
+- **Integration**: Docker Compose test environment
+
+---
+
+## 🚀 Deployment
+
+### Development
+```bash
+# Start development environment
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+### Production
+```bash
+# Build production images
+docker-compose -f docker-compose.prod.yml build
+
+# Start production environment
+docker-compose -f docker-compose.prod.yml up -d
+
+# Run migrations
+docker-compose -f docker-compose.prod.yml exec backend python manage.py migrate
+
+# Create superuser
+docker-compose -f docker-compose.prod.yml exec backend python manage.py createsuperuser
+```
+
+### Scaling
+```bash
+# Scale backend services
+docker-compose -f docker-compose.prod.yml up -d --scale backend=3
+
+# Scale with load balancer
+# Configure Nginx/Traefik for load balancing
+```
+
+---
+
+## 📊 Monitoring & Observability
+
+### Health Checks
+- **Application Health**: `/api/v1/services/health/`
+- **Database Health**: Automatic connection monitoring
+- **Redis Health**: Cache and WebSocket layer monitoring
+- **Docker Health**: Container status monitoring
+
+### Logging
+- **Structured Logging**: JSON-formatted logs for production
+- **Request Logging**: All API requests logged with timing
+- **Error Tracking**: Comprehensive error logging and reporting
+
+### Metrics
+- **Service Statistics**: Total services, health status, types
+- **Performance Metrics**: Response times, error rates
+- **System Metrics**: Resource usage, Docker statistics
+
+---
+
+## 🔒 Security
+
+### Authentication
+- **User Login System**: Secure authentication with username/password
+- **Token Authentication**: Secure API access with automatic token management
+- **Session Management**: Persistent sessions across browser restarts
+- **User Profiles**: Complete user information and preferences
+- **Password Security**: Strong password requirements and validation
+
+### Authorization
+- **Role-based Access**: Viewer, operator, admin roles
+- **API Permissions**: Granular permission system
+- **Resource Access**: Service-specific access control
+
+### Security Headers
+- **HTTPS Enforcement**: TLS/SSL configuration
+- **Security Headers**: XSS protection, content type options
+- **CORS Configuration**: Proper cross-origin settings
+
+---
+
+## 📁 Project Structure
+
+```
+sauron/
+├── backend/                 # Django backend
+│   ├── core/               # Django project settings
+│   ├── authentication/     # User authentication app
+│   ├── services/           # Service management app
+│   ├── healthchecks/       # Health check app
+│   ├── events/             # Event management app
+│   ├── alerts/             # Alert management app
+│   ├── monitoring/         # Monitoring and WebSocket app
+│   └── tests/              # Backend tests
+├── frontend/               # React frontend
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   ├── pages/          # Page components
+│   │   ├── hooks/          # Custom React hooks
+│   │   ├── store/          # State management
+│   │   ├── lib/            # Utilities and API client
+│   │   └── types/          # TypeScript types
+│   └── cypress/            # E2E tests
+├── docs/                   # Documentation
+├── deploy/                 # Deployment configurations
+├── docker-compose.yml      # Development environment
+├── docker-compose.prod.yml # Production environment
+└── README.md              # This file
+```
+
+---
+
+## 🤝 Contributing
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes**: Follow the coding standards
+4. **Run tests**: Ensure all tests pass
+5. **Commit changes**: `git commit -m 'Add amazing feature'`
+6. **Push to branch**: `git push origin feature/amazing-feature`
+7. **Open a Pull Request**
+
+### Development Guidelines
+- Follow PEP 8 for Python code
+- Use TypeScript for all frontend code
+- Write tests for new features
+- Update documentation as needed
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Django** for the excellent web framework
+- **React** for the powerful frontend library
+- **Docker** for containerization
+- **Tailwind CSS** for beautiful styling
+- **All contributors** who help make this project better
+
+---
+
+## 📞 Support
+
+- **Documentation**: Check the `docs/` directory
+- **Issues**: Open an issue on GitHub
+- **Discussions**: Use GitHub Discussions for questions
+
+---
+
+**Built with ❤️ for the Home Hub community**

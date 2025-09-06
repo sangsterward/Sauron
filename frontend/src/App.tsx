@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useWebSocketIntegration } from '@/hooks/useWebSocket'
+import { useAuth } from '@/hooks/useAuth'
 import Layout from '@/components/Layout'
 import Dashboard from '@/pages/Dashboard'
 import Services from '@/pages/Services'
@@ -20,7 +21,13 @@ const queryClient = new QueryClient({
 })
 
 const AppContent: React.FC = () => {
+  const { checkAuth } = useAuth()
   useWebSocketIntegration()
+
+  useEffect(() => {
+    // Check if user is already authenticated on app load
+    checkAuth()
+  }, [checkAuth])
 
   return (
     <Router>
