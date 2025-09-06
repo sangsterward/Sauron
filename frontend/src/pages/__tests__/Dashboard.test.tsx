@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { BrowserRouter } from 'react-router-dom'
@@ -257,19 +257,19 @@ describe('Dashboard', () => {
   // WebSocket tests are complex to mock properly in Vitest
   // The WebSocket functionality is tested in integration tests
   it.skip('connects to WebSocket on mount', async () => {
-    const { wsClient } = await vi.importMock('@/lib/websocket')
+    const mockWsClient = await vi.importMock('@/lib/websocket') as any
     
     renderWithRouter(<Dashboard />)
     
-    expect(wsClient.connect).toHaveBeenCalledWith('/ws/services/', expect.any(Function))
+    expect(mockWsClient.wsClient.connect).toHaveBeenCalledWith('/ws/services/', expect.any(Function))
   })
 
   it.skip('disconnects from WebSocket on unmount', async () => {
-    const { wsClient } = await vi.importMock('@/lib/websocket')
+    const mockWsClient = await vi.importMock('@/lib/websocket') as any
     const { unmount } = renderWithRouter(<Dashboard />)
     
     unmount()
     
-    expect(wsClient.disconnect).toHaveBeenCalledWith('/ws/services/')
+    expect(mockWsClient.wsClient.disconnect).toHaveBeenCalledWith('/ws/services/')
   })
 })

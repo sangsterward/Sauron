@@ -19,7 +19,7 @@ import {
   Activity,
   Server,
   Container,
-  TrendingUp,
+  // TrendingUp,
   AlertTriangle,
   Wifi,
   WifiOff,

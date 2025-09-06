@@ -26,13 +26,13 @@ const mockContext = {
 }
 
 // Mock canvas element
-const mockCanvas = {
-  getContext: vi.fn(() => mockContext),
-  width: 800,
-  height: 600,
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-}
+// const mockCanvas = {
+//   getContext: vi.fn(() => mockContext),
+//   width: 800,
+//   height: 600,
+//   addEventListener: vi.fn(),
+//   removeEventListener: vi.fn(),
+// }
 
 // Mock HTMLCanvasElement
 Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {

@@ -193,7 +193,7 @@ const BrainAnimation: React.FC = () => {
       })
 
       // Draw neurons
-      updatedNeurons.forEach((neuron, index) => {
+      updatedNeurons.forEach((neuron) => {
         const mouseDistance = Math.sqrt(
           Math.pow(neuron.x - mouse.x, 2) + Math.pow(neuron.y - mouse.y, 2)
         )
