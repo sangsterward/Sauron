@@ -132,7 +132,7 @@ class DockerMetricsView(APIView):
 
 
 class MetricsSummaryView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = []  # Allow unauthenticated access for development
 
     def get(self, request):
         """Get current metrics summary"""
@@ -152,7 +152,7 @@ class MetricsSummaryView(APIView):
             # Calculate totals
             total_containers = len(containers)
             running_containers = len(
-                [c for c in containers if c.get("status") == "running"]
+                [c for c in containers if c.get("status") == "running" or c.get("status", "").startswith("up")]
             )
 
             # Get recent Docker metrics for totals
