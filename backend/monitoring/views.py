@@ -88,6 +88,14 @@ class ServerMetricsView(APIView):
             if metrics:
                 saved_metrics = metrics_collector.save_server_metrics(metrics)
                 serializer = ServerMetricsSerializer(saved_metrics)
+                
+                # Broadcast metrics update via WebSocket
+                event_broadcaster.broadcast_metrics_update({
+                    "type": "server_metrics",
+                    "data": serializer.data,
+                    "timestamp": timezone.now().isoformat()
+                })
+                
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(
@@ -119,6 +127,16 @@ class DockerMetricsView(APIView):
             if metrics_list:
                 saved_metrics = metrics_collector.save_docker_metrics(metrics_list)
                 serializer = DockerMetricsSerializer(saved_metrics, many=True)
+                
+                # Broadcast container update via WebSocket
+                from services.docker_service import docker_service
+                containers = (
+                    docker_service.list_containers()
+                    if docker_service.is_available()
+                    else []
+                )
+                event_broadcaster.broadcast_container_update(containers)
+                
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(

@@ -125,6 +125,24 @@ class EventBroadcaster:
             "alerts", {"type": "alert_resolved", "alert_id": alert.id}
         )
 
+    def broadcast_metrics_update(self, metrics_data: dict):
+        """Broadcast metrics update to monitoring clients"""
+        if not self.channel_layer:
+            return
+
+        async_to_sync(self.channel_layer.group_send)(
+            "monitoring", {"type": "metrics_update", "data": metrics_data}
+        )
+
+    def broadcast_container_update(self, containers: list):
+        """Broadcast container update to monitoring clients"""
+        if not self.channel_layer:
+            return
+
+        async_to_sync(self.channel_layer.group_send)(
+            "monitoring", {"type": "container_update", "containers": containers}
+        )
+
 
 # Global instance
 event_broadcaster = EventBroadcaster()
