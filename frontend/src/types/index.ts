@@ -119,6 +119,8 @@ export interface MetricsSummary {
   current_load: number;
   total_containers: number;
   running_containers: number;
+  healthy_containers: number;
+  containers_with_ports: number;
   total_memory_usage: number;
   total_cpu_usage: number;
 }

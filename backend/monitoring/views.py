@@ -160,6 +160,16 @@ class MetricsSummaryView(APIView):
             total_memory_usage = sum(m.memory_usage_mb for m in recent_docker_metrics)
             total_cpu_usage = sum(m.cpu_percent for m in recent_docker_metrics)
 
+            # Calculate healthy containers (containers with "healthy" in status)
+            healthy_containers = len(
+                [c for c in containers if "healthy" in c.get("status", "").lower()]
+            )
+
+            # Calculate containers with exposed ports
+            containers_with_ports = len(
+                [c for c in containers if c.get("ports") and len(c.get("ports", [])) > 0]
+            )
+
             summary = {
                 "current_cpu": server_metrics.get("cpu_percent", 0),
                 "current_memory": server_metrics.get("memory_percent", 0),
@@ -167,6 +177,8 @@ class MetricsSummaryView(APIView):
                 "current_load": server_metrics.get("load_average_1m", 0),
                 "total_containers": total_containers,
                 "running_containers": running_containers,
+                "healthy_containers": healthy_containers,
+                "containers_with_ports": containers_with_ports,
                 "total_memory_usage": round(total_memory_usage, 2),
                 "total_cpu_usage": round(total_cpu_usage, 2),
             }

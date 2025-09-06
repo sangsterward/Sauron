@@ -165,7 +165,7 @@ const Monitoring: React.FC = () => {
       </div>
 
       {/* Docker Containers Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -202,14 +202,30 @@ const Monitoring: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">
-                Total CPU Usage
+                Healthy Containers
               </p>
               <p className="text-2xl font-bold text-gray-900">
-                {summary?.total_cpu_usage.toFixed(1)}%
+                {summary?.healthy_containers || 0}
+              </p>
+            </div>
+            <div className="p-3 bg-green-50 rounded-lg">
+              <Server className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">
+                Containers with Ports
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {summary?.containers_with_ports || 0}
               </p>
             </div>
             <div className="p-3 bg-blue-50 rounded-lg">
-              <TrendingUp className="h-6 w-6 text-blue-600" />
+              <Network className="h-6 w-6 text-blue-600" />
             </div>
           </div>
         </div>

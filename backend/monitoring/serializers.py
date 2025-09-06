@@ -58,5 +58,7 @@ class MetricsSummarySerializer(serializers.Serializer):
     current_load = serializers.FloatField()
     total_containers = serializers.IntegerField()
     running_containers = serializers.IntegerField()
+    healthy_containers = serializers.IntegerField()
+    containers_with_ports = serializers.IntegerField()
     total_memory_usage = serializers.FloatField()
     total_cpu_usage = serializers.FloatField()
