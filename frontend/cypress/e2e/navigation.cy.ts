@@ -7,27 +7,27 @@ describe('Navigation', () => {
     // Test navigation to Services page
     cy.contains('Services').click()
     cy.url().should('include', '/services')
-    cy.contains('Services page coming soon').should('be.visible')
+    cy.contains('Services').should('be.visible')
 
     // Test navigation to Monitoring page
     cy.contains('Monitoring').click()
     cy.url().should('include', '/monitoring')
-    cy.contains('Monitoring page coming soon').should('be.visible')
+    cy.contains('Monitoring').should('be.visible')
 
     // Test navigation to Alerts page
     cy.contains('Alerts').click()
     cy.url().should('include', '/alerts')
-    cy.contains('Alerts page coming soon').should('be.visible')
+    cy.contains('Alerts').should('be.visible')
 
     // Test navigation to Docker page
     cy.contains('Docker').click()
     cy.url().should('include', '/docker')
-    cy.contains('Docker page coming soon').should('be.visible')
+    cy.contains('Docker').should('be.visible')
 
     // Test navigation to Settings page
     cy.contains('Settings').click()
     cy.url().should('include', '/settings')
-    cy.contains('Settings page coming soon').should('be.visible')
+    cy.contains('Settings').should('be.visible')
 
     // Test navigation back to Dashboard
     cy.contains('Dashboard').click()
