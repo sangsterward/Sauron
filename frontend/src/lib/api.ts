@@ -27,8 +27,22 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
-      window.location.href = '/login';
+      // Don't redirect to login if we're already on the login page
+      if (!window.location.pathname.includes('login')) {
+        window.location.href = '/login';
+      }
     }
+    
+    // Handle cases where response is not JSON
+    if (error.response && typeof error.response.data === 'string') {
+      try {
+        error.response.data = JSON.parse(error.response.data);
+      } catch (e) {
+        // If parsing fails, create a proper error object
+        error.response.data = { detail: error.response.data || 'An error occurred' };
+      }
+    }
+    
     return Promise.reject(error);
   }
 );

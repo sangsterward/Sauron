@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { apiClient } from '@/lib/api'
 
 interface User {
   id: number
@@ -37,20 +38,12 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null })
         
         try {
-          const response = await fetch('/api/v1/auth/login/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, password }),
+          const response = await apiClient.post('/auth/login/', {
+            username,
+            password,
           })
 
-          if (!response.ok) {
-            const errorData = await response.json()
-            throw new Error(errorData.detail || 'Login failed')
-          }
-
-          const data = await response.json()
+          const data = response.data
           
           // Store token in localStorage for API client
           localStorage.setItem('auth_token', data.token)
@@ -62,10 +55,10 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           })
-        } catch (error) {
+        } catch (error: any) {
           set({
             isLoading: false,
-            error: error instanceof Error ? error.message : 'Login failed',
+            error: error.response?.data?.detail || error.message || 'Login failed',
           })
           throw error
         }

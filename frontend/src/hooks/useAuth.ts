@@ -25,8 +25,9 @@ export const useAuth = () => {
         const response = await apiClient.get('/auth/user/')
         setUser(response.data)
         setToken(storedToken)
-      } catch (error) {
+      } catch (error: any) {
         // Token is invalid, remove it
+        console.log('Token validation failed:', error.response?.data || error.message)
         localStorage.removeItem('auth_token')
         logout()
       } finally {
