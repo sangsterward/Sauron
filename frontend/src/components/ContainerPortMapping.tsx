@@ -7,7 +7,9 @@ interface ContainerPortMappingProps {
 }
 
 const ContainerPortMapping: React.FC<ContainerPortMappingProps> = ({ containers }) => {
-  const runningContainers = containers?.filter(container => container.status === 'running') || []
+  const runningContainers = containers?.filter(container => 
+    container.status === 'running' || container.status.startsWith('up')
+  ) || []
 
   const getPortIcon = (port: string) => {
     if (port.includes('443')) return <Lock className="h-4 w-4 text-green-600" />

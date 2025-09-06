@@ -181,7 +181,7 @@ class MetricsSummaryView(APIView):
 
 
 class LiveMetricsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = []  # Allow unauthenticated access for development
 
     def get(self, request):
         """Get live metrics for real-time updates"""
