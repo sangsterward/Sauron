@@ -194,7 +194,15 @@ class MetricsCollector:
             return float(size_str[:-2]) / 1024
         elif size_str.endswith("MB"):
             return float(size_str[:-2])
+        elif size_str.endswith("MIB"):  # Handle "MiB" suffix (mebibytes)
+            return float(size_str[:-3])
+        elif size_str.endswith("MI"):  # Handle "MI" suffix (megabytes)
+            return float(size_str[:-2])
         elif size_str.endswith("GB"):
+            return float(size_str[:-2]) * 1024
+        elif size_str.endswith("GIB"):  # Handle "GiB" suffix (gibibytes)
+            return float(size_str[:-3]) * 1024
+        elif size_str.endswith("GI"):  # Handle "GI" suffix (gigabytes)
             return float(size_str[:-2]) * 1024
         elif size_str.endswith("TB"):
             return float(size_str[:-2]) * 1024 * 1024
@@ -202,7 +210,11 @@ class MetricsCollector:
             return float(size_str[:-1]) / (1024 * 1024)
         else:
             # Assume bytes if no unit
-            return float(size_str) / (1024 * 1024)
+            try:
+                return float(size_str) / (1024 * 1024)
+            except ValueError:
+                logger.warning(f"Could not parse size string: {size_str}")
+                return 0.0
 
     def save_server_metrics(self, metrics: Dict) -> ServerMetrics:
         """Save server metrics to database"""
