@@ -7,6 +7,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
 from events.models import Event
 from services.models import Service
+from .services.docker_service import docker_service
 
 logger = logging.getLogger(__name__)
 
@@ -268,3 +269,87 @@ class AlertConsumer(AsyncWebsocketConsumer):
                 {"type": "alert_resolved", "alert_id": event["alert_id"]}
             )
         )
+
+
+class MonitoringConsumer(AsyncWebsocketConsumer):
+    """WebSocket consumer for real-time monitoring data"""
+    
+    async def connect(self):
+        self.group_name = "monitoring"
+        
+        # For development, allow unauthenticated access
+        # In production, you might want to require authentication
+        # if self.scope["user"] == AnonymousUser():
+        #     await self.close()
+        #     return
+
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
+
+        # Send initial monitoring data
+        initial_data = await self.get_initial_data()
+        await self.send(
+            text_data=json.dumps({"type": "initial_data", "data": initial_data})
+        )
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+
+    async def receive(self, text_data):
+        try:
+            data = json.loads(text_data)
+            message_type = data.get("type")
+
+            if message_type == "ping":
+                await self.send(
+                    text_data=json.dumps(
+                        {"type": "pong", "timestamp": data.get("timestamp")}
+                    )
+                )
+            elif message_type == "get_containers":
+                containers = await self.get_containers()
+                await self.send(
+                    text_data=json.dumps({"type": "containers_update", "containers": containers})
+                )
+        except json.JSONDecodeError:
+            await self.send(
+                text_data=json.dumps({"type": "error", "message": "Invalid JSON"})
+            )
+
+    async def metrics_update(self, event):
+        """Handle metrics update messages"""
+        await self.send(
+            text_data=json.dumps(
+                {"type": "metrics_update", "data": event["data"]}
+            )
+        )
+
+    async def container_update(self, event):
+        """Handle container update messages"""
+        await self.send(
+            text_data=json.dumps(
+                {"type": "container_update", "containers": event["containers"]}
+            )
+        )
+
+    @database_sync_to_async
+    def get_initial_data(self):
+        """Get initial monitoring data"""
+        try:
+            containers = docker_service.list_containers()
+            return {
+                "containers": containers,
+                "timestamp": "2025-01-06T21:36:32Z"  # You might want to use timezone.now()
+            }
+        except Exception as e:
+            logger.error(f"Error getting initial monitoring data: {e}")
+            return {"containers": [], "timestamp": "2025-01-06T21:36:32Z"}
+
+    @database_sync_to_async
+    def get_containers(self):
+        """Get current container data"""
+        try:
+            return docker_service.list_containers()
+        except Exception as e:
+            logger.error(f"Error getting containers: {e}")
+            return []

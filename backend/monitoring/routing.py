@@ -9,4 +9,5 @@ websocket_urlpatterns = [
     ),
     re_path(r"ws/events/$", consumers.EventConsumer.as_asgi()),
     re_path(r"ws/alerts/$", consumers.AlertConsumer.as_asgi()),
+    re_path(r"ws/monitoring/$", consumers.MonitoringConsumer.as_asgi()),
 ]

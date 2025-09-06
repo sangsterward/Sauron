@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   useServerMetrics,
   useMetricsSummary,
@@ -7,6 +7,8 @@ import {
   useCollectDockerMetrics,
 } from '@/hooks/useMetrics'
 import { MetricsChart } from '@/components/MetricsChart'
+import { wsClient } from '@/lib/websocket'
+import { WebSocketMessage } from '@/types'
 import {
   Cpu,
   HardDrive,
@@ -18,14 +20,22 @@ import {
   Container,
   TrendingUp,
   AlertTriangle,
+  Wifi,
+  WifiOff,
+  Clock,
 } from 'lucide-react'
 
 const Monitoring: React.FC = () => {
   const [timeRange, setTimeRange] = useState(1) // hours
-  const { data: serverMetrics, isLoading: serverLoading } =
-    useServerMetrics(timeRange)
-  const { data: summary, isLoading: summaryLoading } = useMetricsSummary()
-  const { data: liveMetrics, isLoading: liveLoading } = useLiveMetrics()
+  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [refreshInterval, setRefreshInterval] = useState(10) // seconds
+  const [wsConnected, setWsConnected] = useState(false)
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
+  
+  const { data: serverMetrics, isLoading: serverLoading, refetch: refetchServerMetrics } =
+    useServerMetrics(timeRange, false) // Disable built-in auto-refresh, we handle it manually
+  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = useMetricsSummary(false)
+  const { data: liveMetrics, isLoading: liveLoading, refetch: refetchLiveMetrics } = useLiveMetrics(false)
 
   const collectServerMetrics = useCollectServerMetrics()
   const collectDockerMetrics = useCollectDockerMetrics()
@@ -33,6 +43,59 @@ const Monitoring: React.FC = () => {
   const handleCollectMetrics = () => {
     collectServerMetrics.mutate()
     collectDockerMetrics.mutate()
+    setLastUpdate(new Date())
+  }
+
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (!autoRefresh) return
+
+    const interval = setInterval(() => {
+      refetchServerMetrics()
+      refetchSummary()
+      refetchLiveMetrics()
+      setLastUpdate(new Date())
+    }, refreshInterval * 1000)
+
+    return () => clearInterval(interval)
+  }, [autoRefresh, refreshInterval, refetchServerMetrics, refetchSummary, refetchLiveMetrics])
+
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    // Connect to monitoring WebSocket
+    const ws = wsClient.connect('/ws/monitoring/', (message: WebSocketMessage) => {
+      if (message.type === 'metrics_update') {
+        // Refresh data when we receive metrics updates
+        refetchServerMetrics()
+        refetchSummary()
+        refetchLiveMetrics()
+        setLastUpdate(new Date())
+      } else if (message.type === 'container_update') {
+        // Refresh live metrics when containers change
+        refetchLiveMetrics()
+        setLastUpdate(new Date())
+      }
+    })
+
+    // Track connection status
+    const checkConnection = () => {
+      setWsConnected(ws.readyState === WebSocket.OPEN)
+    }
+    
+    ws.addEventListener('open', checkConnection)
+    ws.addEventListener('close', checkConnection)
+    ws.addEventListener('error', checkConnection)
+
+    return () => {
+      wsClient.disconnect('/ws/monitoring/')
+    }
+  }, [refetchServerMetrics, refetchSummary, refetchLiveMetrics])
+
+  const handleRefresh = () => {
+    refetchServerMetrics()
+    refetchSummary()
+    refetchLiveMetrics()
+    setLastUpdate(new Date())
   }
 
   const isLoading = serverLoading || summaryLoading || liveLoading
@@ -48,8 +111,50 @@ const Monitoring: React.FC = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-bold text-gray-900">Server Monitoring</h2>
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Server Monitoring</h2>
+          <div className="flex items-center space-x-4 mt-2">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              {wsConnected ? (
+                <>
+                  <Wifi className="h-4 w-4 text-green-500" />
+                  <span>Live Updates</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="h-4 w-4 text-gray-400" />
+                  <span>Polling Mode</span>
+                </>
+              )}
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <Clock className="h-4 w-4" />
+              <span>Last updated: {lastUpdate.toLocaleTimeString()}</span>
+            </div>
+          </div>
+        </div>
         <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <label className="text-sm text-gray-600">Auto-refresh:</label>
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            />
+          </div>
+          {autoRefresh && (
+            <select
+              value={refreshInterval}
+              onChange={(e) => setRefreshInterval(Number(e.target.value))}
+              className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value={5}>5s</option>
+              <option value={10}>10s</option>
+              <option value={30}>30s</option>
+              <option value={60}>1m</option>
+            </select>
+          )}
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(Number(e.target.value))}
@@ -60,16 +165,23 @@ const Monitoring: React.FC = () => {
             <option value={24}>Last 24 Hours</option>
           </select>
           <button
+            onClick={handleRefresh}
+            className="btn btn-secondary flex items-center space-x-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Refresh</span>
+          </button>
+          <button
             onClick={handleCollectMetrics}
             disabled={
               collectServerMetrics.isPending || collectDockerMetrics.isPending
             }
             className="btn btn-primary flex items-center space-x-2"
           >
-            <RefreshCw
+            <Activity
               className={`h-4 w-4 ${
                 collectServerMetrics.isPending || collectDockerMetrics.isPending
-                  ? 'animate-spin'
+                  ? 'animate-pulse'
                   : ''
               }`}
             />

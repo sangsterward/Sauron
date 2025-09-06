@@ -3,14 +3,14 @@ import { apiClient } from '@/lib/api'
 import { ServerMetrics, DockerMetrics, MetricsSummary, LiveMetrics } from '@/types'
 
 // Server Metrics
-export const useServerMetrics = (hours: number = 1) => {
+export const useServerMetrics = (hours: number = 1, autoRefresh: boolean = false) => {
   return useQuery({
     queryKey: ['server-metrics', hours],
     queryFn: async () => {
       const response = await apiClient.get(`/monitoring/server_metrics/?hours=${hours}`)
       return response.data as ServerMetrics[]
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: autoRefresh ? 30000 : false, // Refetch every 30 seconds if autoRefresh enabled
   })
 }
 
@@ -60,25 +60,25 @@ export const useCollectDockerMetrics = () => {
 }
 
 // Metrics Summary
-export const useMetricsSummary = () => {
+export const useMetricsSummary = (autoRefresh: boolean = false) => {
   return useQuery({
     queryKey: ['metrics-summary'],
     queryFn: async () => {
       const response = await apiClient.get('/monitoring/summary/')
       return response.data as MetricsSummary
     },
-    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchInterval: autoRefresh ? 10000 : false, // Refetch every 10 seconds if autoRefresh enabled
   })
 }
 
 // Live Metrics
-export const useLiveMetrics = () => {
+export const useLiveMetrics = (autoRefresh: boolean = false) => {
   return useQuery({
     queryKey: ['live-metrics'],
     queryFn: async () => {
       const response = await apiClient.get('/monitoring/live/')
       return response.data as LiveMetrics
     },
-    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchInterval: autoRefresh ? 5000 : false, // Refetch every 5 seconds if autoRefresh enabled
   })
 }
