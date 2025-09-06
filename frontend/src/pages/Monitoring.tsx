@@ -7,6 +7,7 @@ import {
   useCollectDockerMetrics,
 } from '@/hooks/useMetrics'
 import { MetricsChart } from '@/components/MetricsChart'
+import BrainAnimation from '@/components/BrainAnimation'
 import { wsClient } from '@/lib/websocket'
 import { WebSocketMessage } from '@/types'
 import {
@@ -109,7 +110,12 @@ const Monitoring: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="relative min-h-screen">
+      {/* Brain Animation Background */}
+      <BrainAnimation />
+      
+      {/* Content with backdrop blur for better readability */}
+      <div className="relative z-10 backdrop-blur-sm bg-white/95 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Server Monitoring</h2>
@@ -479,6 +485,7 @@ const Monitoring: React.FC = () => {
           </button>
         </div>
       )}
+      </div>
     </div>
   )
 }
