@@ -127,18 +127,39 @@ class DockerService:
                 # Skip header line
                 for line in lines[1:]:
                     if line.strip():
-                        parts = line.split("\t")
-                        if len(parts) >= 5:
+                        # Split by multiple spaces/tabs and clean up
+                        parts = [part.strip() for part in line.split() if part.strip()]
+                        if len(parts) >= 4:
                             container_id = parts[0]
                             name = parts[1]
                             image = parts[2]
-                            status = parts[3]
-                            ports_str = parts[4] if len(parts) > 4 else ""
                             
-                            # Parse ports from string format like "0.0.0.0:8080->80/tcp, 0.0.0.0:8443->443/tcp"
+                            # Status might be multiple words, find where ports start
+                            status_parts = []
+                            ports_str = ""
+                            
+                            # Look for port patterns to separate status from ports
+                            for i, part in enumerate(parts[3:], 3):
+                                if "/tcp" in part or "/udp" in part or "->" in part or ":" in part:
+                                    # Found ports, everything before this is status
+                                    status_parts = parts[3:i]
+                                    ports_str = " ".join(parts[i:])
+                                    break
+                                else:
+                                    status_parts.append(part)
+                            
+                            status = " ".join(status_parts).lower()
+                            
+                            # Parse ports from string format
                             ports = []
                             if ports_str and ports_str != "<none>":
-                                port_parts = ports_str.split(", ")
+                                # Handle multiple ports separated by commas or spaces
+                                port_parts = []
+                                if "," in ports_str:
+                                    port_parts = [p.strip() for p in ports_str.split(",")]
+                                else:
+                                    port_parts = [ports_str.strip()]
+                                
                                 for port_part in port_parts:
                                     if "->" in port_part:
                                         # Format: "0.0.0.0:8080->80/tcp"
@@ -160,7 +181,7 @@ class DockerService:
                                     "id": container_id,
                                     "name": name,
                                     "image": image,
-                                    "status": status.lower(),
+                                    "status": status,
                                     "state": {"Status": status},
                                     "labels": {},
                                     "ports": detailed_ports if detailed_ports else ports,
