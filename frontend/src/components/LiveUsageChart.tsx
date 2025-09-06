@@ -78,6 +78,21 @@ const LiveUsageChart: React.FC<LiveUsageChartProps> = ({
     }
   }
 
+  const getMaxValue = () => {
+    if (data.length === 0) return 100
+
+    // Get the last 20 data points for live view
+    const recentData = data.slice(-20)
+    
+    let maxValue = 0
+    recentData.forEach((item) => {
+      maxValue = Math.max(maxValue, item.cpu_percent, item.memory_percent, item.disk_percent)
+    })
+
+    // Add 10% padding above the max value for better visualization
+    return Math.ceil(maxValue * 1.1)
+  }
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -93,7 +108,7 @@ const LiveUsageChart: React.FC<LiveUsageChartProps> = ({
     scales: {
       y: {
         beginAtZero: true,
-        max: 100,
+        max: getMaxValue(),
         ticks: {
           callback: function(value: any) {
             return value + '%'

@@ -148,7 +148,8 @@ describe('LiveUsageChart', () => {
     expect(chartOptions.responsive).toBe(true)
     expect(chartOptions.maintainAspectRatio).toBe(false)
     expect(chartOptions.plugins.title.text).toBe('Live System Usage')
-    expect(chartOptions.scales.y.max).toBe(100)
+    // Max value should be auto-scaled based on data (65.0 * 1.1 = 72)
+    expect(chartOptions.scales.y.max).toBe(72)
   })
 
   it('disables animation for live updates', () => {

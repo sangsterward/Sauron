@@ -112,6 +112,31 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
     }
   }
 
+  const getMaxValue = () => {
+    if (data.length === 0) return 100
+
+    let maxValue = 0
+    switch (type) {
+      case 'cpu':
+        maxValue = Math.max(...data.map((item) => (item as ServerMetrics).cpu_percent))
+        break
+      case 'memory':
+        maxValue = Math.max(...data.map((item) => (item as ServerMetrics).memory_percent))
+        break
+      case 'disk':
+        maxValue = Math.max(...data.map((item) => (item as ServerMetrics).disk_percent))
+        break
+      case 'network':
+        const rxMax = Math.max(...data.map((item) => (item as ServerMetrics).network_rx_mb))
+        const txMax = Math.max(...data.map((item) => (item as ServerMetrics).network_tx_mb))
+        maxValue = Math.max(rxMax, txMax)
+        break
+    }
+
+    // Add 10% padding above the max value for better visualization
+    return Math.ceil(maxValue * 1.1)
+  }
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -127,10 +152,18 @@ export const MetricsChart: React.FC<MetricsChartProps> = ({
     scales: {
       y: {
         beginAtZero: true,
-        max:
-          type === 'cpu' || type === 'memory' || type === 'disk'
-            ? 100
-            : undefined,
+        max: getMaxValue(),
+        ticks: {
+          callback: function(value: any) {
+            // Format ticks based on chart type
+            if (type === 'cpu' || type === 'memory' || type === 'disk') {
+              return value + '%'
+            } else if (type === 'network') {
+              return value + ' MB'
+            }
+            return value
+          }
+        }
       },
     },
   }
