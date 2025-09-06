@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "home-hub-monitor"
+version = "0.1.0"
+description = "Home Hub Monitor Backend"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^5.0"
+djangorestframework = "^3.14"
+django-cors-headers = "^4.3"
+channels = "^4.0"
+channels-redis = "^4.1"
+psycopg2-binary = "^2.9"
+redis = "^5.0"
+celery = "^5.3"
+uvicorn = "^0.24"
+docker = "^6.1"
+requests = "^2.31"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4"
+pytest-django = "^4.5"
+pytest-cov = "^4.1"
+coverage = "^7.3"
+factory-boy = "^3.3"
+black = "^23.7"
+isort = "^5.12"
+ruff = "^0.0.284"
+mypy = "^1.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
