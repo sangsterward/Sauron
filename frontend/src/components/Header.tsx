@@ -15,21 +15,21 @@ const Header: React.FC = () => {
 
   return (
     <>
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-gray-800 shadow-lg border-b border-gray-700">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Monitor className="h-8 w-8 text-primary-600" />
-              <h1 className="text-2xl font-bold text-gray-900">
+              <Monitor className="h-8 w-8 text-blue-400" />
+              <h1 className="text-2xl font-bold text-white">
                 Home Hub Monitor
               </h1>
             </div>
 
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-500 hover:text-gray-700">
+              <button className="p-2 text-gray-400 hover:text-white transition-colors">
                 <Bell className="h-5 w-5" />
               </button>
-              <button className="p-2 text-gray-500 hover:text-gray-700">
+              <button className="p-2 text-gray-400 hover:text-white transition-colors">
                 <Settings className="h-5 w-5" />
               </button>
 
@@ -37,7 +37,7 @@ const Header: React.FC = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2 p-2 text-gray-500 hover:text-gray-700"
+                    className="flex items-center space-x-2 p-2 text-gray-400 hover:text-white transition-colors"
                     data-testid="user-menu-button"
                   >
                     <User className="h-5 w-5" />
@@ -47,18 +47,18 @@ const Header: React.FC = () => {
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50" data-testid="user-dropdown">
-                      <div className="px-4 py-2 border-b">
-                        <p className="text-sm font-medium text-gray-900">
+                    <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-xl border border-gray-600 py-1 z-50" data-testid="user-dropdown">
+                      <div className="px-4 py-2 border-b border-gray-600">
+                        <p className="text-sm font-medium text-white">
                           {user?.username}
                         </p>
                         {user?.email && (
-                          <p className="text-xs text-gray-500">{user.email}</p>
+                          <p className="text-xs text-gray-400">{user.email}</p>
                         )}
                       </div>
                       <button
                         onClick={handleLogout}
-                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                        className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-600 hover:text-white flex items-center space-x-2 transition-colors"
                         data-testid="logout-button"
                       >
                         <LogOut className="h-4 w-4" />
@@ -70,7 +70,7 @@ const Header: React.FC = () => {
               ) : (
                 <button
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
+                  className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                   data-testid="login-button"
                 >
                   <LogIn className="h-4 w-4" />

@@ -99,10 +99,14 @@ const LiveUsageChart: React.FC<LiveUsageChartProps> = ({
     plugins: {
       legend: {
         position: 'top' as const,
+        labels: {
+          color: '#ffffff',
+        },
       },
       title: {
         display: true,
         text: 'Live System Usage',
+        color: '#ffffff',
       },
     },
     scales: {
@@ -110,15 +114,23 @@ const LiveUsageChart: React.FC<LiveUsageChartProps> = ({
         beginAtZero: true,
         max: getMaxValue(),
         ticks: {
+          color: '#9ca3af',
           callback: function(value: any) {
             return value + '%'
           }
-        }
+        },
+        grid: {
+          color: '#374151',
+        },
       },
       x: {
         ticks: {
+          color: '#9ca3af',
           maxTicksLimit: 10,
-        }
+        },
+        grid: {
+          color: '#374151',
+        },
       }
     },
     elements: {
@@ -134,9 +146,9 @@ const LiveUsageChart: React.FC<LiveUsageChartProps> = ({
 
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="flex items-center justify-center h-64 text-gray-400">
         <div className="text-center">
-          <div className="text-lg font-medium mb-2">No Data Available</div>
+          <div className="text-lg font-medium mb-2 text-white">No Data Available</div>
           <div className="text-sm">Collecting metrics...</div>
         </div>
       </div>

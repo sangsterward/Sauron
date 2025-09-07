@@ -50,15 +50,15 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           data-testid="login-backdrop"
         />
 
-        <div className="relative w-full max-w-md bg-white rounded-lg shadow-lg" data-testid="login-modal">
-          <div className="flex items-center justify-between p-6 border-b">
+        <div className="relative w-full max-w-md bg-gray-800 rounded-lg shadow-xl border border-gray-700" data-testid="login-modal">
+          <div className="flex items-center justify-between p-6 border-b border-gray-700">
             <div className="flex items-center space-x-2">
-              <LogIn className="h-5 w-5 text-primary-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Login</h2>
+              <LogIn className="h-5 w-5 text-blue-400" />
+              <h2 className="text-lg font-semibold text-white">Login</h2>
             </div>
             <button
               onClick={handleClose}
-              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1 text-gray-400 hover:text-white transition-colors"
               data-testid="login-close-button"
             >
               <X className="h-5 w-5" />
@@ -67,9 +67,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
           <form onSubmit={handleSubmit} className="p-6">
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2" data-testid="login-error">
-                <AlertCircle className="h-4 w-4 text-red-500" />
-                <span className="text-sm text-red-700">{error}</span>
+              <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-lg flex items-center space-x-2" data-testid="login-error">
+                <AlertCircle className="h-4 w-4 text-red-400" />
+                <span className="text-sm text-red-300">{error}</span>
               </div>
             )}
 
@@ -77,7 +77,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <div>
                 <label
                   htmlFor="username"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-white mb-1"
                 >
                   Username
                 </label>
@@ -86,7 +86,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your username"
                   required
                   disabled={isSubmitting}
@@ -97,7 +97,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-white mb-1"
                 >
                   Password
                 </label>
@@ -107,7 +107,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 pr-10 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter your password"
                     required
                     disabled={isSubmitting}
@@ -116,7 +116,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                     disabled={isSubmitting}
                     data-testid="password-toggle-button"
                   >
@@ -134,7 +134,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
                 disabled={isSubmitting}
                 data-testid="login-cancel-button"
               >
@@ -142,7 +142,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center justify-center space-x-2"
                 disabled={isSubmitting || !username || !password}
                 data-testid="login-submit-button"
               >

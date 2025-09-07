@@ -78,17 +78,17 @@ const Dashboard: React.FC = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
+        <h2 className="text-3xl font-bold text-white">Dashboard</h2>
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
             {wsConnected ? (
               <>
-                <Wifi className="h-4 w-4 text-green-500" />
+                <Wifi className="h-4 w-4 text-green-400" />
                 <span>Live Updates</span>
               </>
             ) : (
               <>
-                <WifiOff className="h-4 w-4 text-gray-400" />
+                <WifiOff className="h-4 w-4 text-gray-500" />
                 <span>Offline Mode</span>
               </>
             )}
@@ -125,14 +125,14 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Live Usage Chart */}
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+      <div className="bg-gray-700 rounded-lg shadow-lg border border-gray-600 p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-            <Activity className="h-5 w-5 text-blue-600" />
+          <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
+            <Activity className="h-5 w-5 text-blue-400" />
             <span>Live System Usage</span>
             {wsConnected && (
-              <div className="flex items-center space-x-1 text-xs text-green-600">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <div className="flex items-center space-x-1 text-xs text-green-400">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span>Live</span>
               </div>
             )}
@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
           <button
             onClick={handleCollectMetrics}
             disabled={collectServerMetrics.isPending}
-            className="btn btn-primary flex items-center space-x-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors disabled:opacity-50"
             data-testid="collect-metrics-button"
           >
             <Activity
@@ -158,8 +158,8 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Container Port Mapping */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="bg-gray-700 rounded-lg shadow-lg border border-gray-600 p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">
           Active Container Port Mappings
         </h3>
         <ContainerPortMapping 

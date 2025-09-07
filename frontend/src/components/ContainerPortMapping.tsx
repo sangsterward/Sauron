@@ -42,9 +42,9 @@ const ContainerPortMapping: React.FC<ContainerPortMappingProps> = ({ containers,
   if (runningContainers.length === 0) {
     return (
       <div className="text-center py-8">
-        <Server className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Running Containers</h3>
-        <p className="text-gray-600">No containers are currently running.</p>
+        <Server className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-white mb-2">No Running Containers</h3>
+        <p className="text-gray-400">No containers are currently running.</p>
       </div>
     )
   }
@@ -56,62 +56,62 @@ const ContainerPortMapping: React.FC<ContainerPortMappingProps> = ({ containers,
         const metrics = getContainerMetrics(container.name)
         
         return (
-          <div key={container.id} className="border rounded-lg p-4 bg-gray-50">
+          <div key={container.id} className="border border-gray-600 rounded-lg p-4 bg-gray-600">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                <Server className="h-5 w-5 text-blue-600" />
-                <h4 className="font-medium text-gray-900">{container.name}</h4>
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                <Server className="h-5 w-5 text-blue-400" />
+                <h4 className="font-medium text-white">{container.name}</h4>
+                <span className="px-2 py-1 bg-green-600 text-green-100 text-xs rounded-full">
                   {container.status}
                 </span>
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-400">
                 {container.image}
               </div>
             </div>
 
             {/* Container Metrics */}
             {metrics && (
-              <div className="mb-4 p-3 bg-white rounded-lg border">
-                <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <div className="mb-4 p-3 bg-gray-700 rounded-lg border border-gray-500">
+                <h5 className="text-sm font-medium text-white mb-2 flex items-center">
                   <Activity className="h-4 w-4 mr-1" />
                   Resource Usage
                 </h5>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="flex items-center space-x-2">
-                    <Cpu className="h-4 w-4 text-blue-600" />
+                    <Cpu className="h-4 w-4 text-blue-400" />
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-white">
                         {metrics.cpu_percent.toFixed(1)}%
                       </div>
-                      <div className="text-xs text-gray-500">CPU</div>
+                      <div className="text-xs text-gray-400">CPU</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <MemoryStick className="h-4 w-4 text-green-600" />
+                    <MemoryStick className="h-4 w-4 text-green-400" />
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-white">
                         {metrics.memory_usage_mb.toFixed(1)}MB
                       </div>
-                      <div className="text-xs text-gray-500">Memory</div>
+                      <div className="text-xs text-gray-400">Memory</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <ExternalLink className="h-4 w-4 text-purple-600" />
+                    <ExternalLink className="h-4 w-4 text-purple-400" />
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-white">
                         {metrics.network_rx_mb.toFixed(1)}MB
                       </div>
-                      <div className="text-xs text-gray-500">RX</div>
+                      <div className="text-xs text-gray-400">RX</div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <ExternalLink className="h-4 w-4 text-orange-600" />
+                    <ExternalLink className="h-4 w-4 text-orange-400" />
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-white">
                         {metrics.network_tx_mb.toFixed(1)}MB
                       </div>
-                      <div className="text-xs text-gray-500">TX</div>
+                      <div className="text-xs text-gray-400">TX</div>
                     </div>
                   </div>
                 </div>
@@ -120,16 +120,16 @@ const ContainerPortMapping: React.FC<ContainerPortMappingProps> = ({ containers,
             
             {ports.length > 0 ? (
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-gray-700">Port Mappings:</h5>
+                <h5 className="text-sm font-medium text-white">Port Mappings:</h5>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {ports.map((port, index) => (
-                    <div key={index} className="flex items-center space-x-2 p-2 bg-white rounded border">
+                    <div key={index} className="flex items-center space-x-2 p-2 bg-gray-700 rounded border border-gray-500">
                       {getPortIcon(port.host)}
                       <div className="flex-1">
-                        <div className="text-sm font-medium">
+                        <div className="text-sm font-medium text-white">
                           {port.host}:{port.container}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-400">
                           {port.protocol}
                         </div>
                       </div>
@@ -138,7 +138,7 @@ const ContainerPortMapping: React.FC<ContainerPortMappingProps> = ({ containers,
                 </div>
               </div>
             ) : (
-              <div className="text-sm text-gray-500 italic">
+              <div className="text-sm text-gray-400 italic">
                 No port mappings configured
               </div>
             )}
