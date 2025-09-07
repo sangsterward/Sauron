@@ -162,7 +162,10 @@ const Dashboard: React.FC = () => {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Active Container Port Mappings
         </h3>
-        <ContainerPortMapping containers={liveMetrics?.containers || []} />
+        <ContainerPortMapping 
+          containers={liveMetrics?.containers || []} 
+          dockerMetrics={liveMetrics?.docker || []}
+        />
       </div>
 
       {selectedService && (

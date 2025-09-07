@@ -1,15 +1,24 @@
 import React from 'react'
-import { Server, ExternalLink, Globe, Lock } from 'lucide-react'
-import { Container } from '@/types'
+import { Server, ExternalLink, Globe, Lock, Cpu, MemoryStick, Activity } from 'lucide-react'
+import { Container, DockerMetrics } from '@/types'
 
 interface ContainerPortMappingProps {
   containers: Container[]
+  dockerMetrics?: DockerMetrics[]
 }
 
-const ContainerPortMapping: React.FC<ContainerPortMappingProps> = ({ containers }) => {
+const ContainerPortMapping: React.FC<ContainerPortMappingProps> = ({ containers, dockerMetrics = [] }) => {
   const runningContainers = containers?.filter(container => 
     container.status === 'running' || container.status.startsWith('up')
   ) || []
+
+  // Helper function to get metrics for a container
+  const getContainerMetrics = (containerName: string): DockerMetrics | undefined => {
+    return dockerMetrics.find(metric => 
+      metric.container_name === containerName || 
+      metric.container_name === containerName.replace(/^sauron-/, '').replace(/-1$/, '')
+    )
+  }
 
   const getPortIcon = (port: string) => {
     if (port.includes('443')) return <Lock className="h-4 w-4 text-green-600" />
@@ -44,6 +53,7 @@ const ContainerPortMapping: React.FC<ContainerPortMappingProps> = ({ containers 
     <div className="space-y-4">
       {runningContainers.map((container) => {
         const ports = formatPorts(container.ports || [])
+        const metrics = getContainerMetrics(container.name)
         
         return (
           <div key={container.id} className="border rounded-lg p-4 bg-gray-50">
@@ -59,6 +69,54 @@ const ContainerPortMapping: React.FC<ContainerPortMappingProps> = ({ containers 
                 {container.image}
               </div>
             </div>
+
+            {/* Container Metrics */}
+            {metrics && (
+              <div className="mb-4 p-3 bg-white rounded-lg border">
+                <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <Activity className="h-4 w-4 mr-1" />
+                  Resource Usage
+                </h5>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="flex items-center space-x-2">
+                    <Cpu className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {metrics.cpu_percent.toFixed(1)}%
+                      </div>
+                      <div className="text-xs text-gray-500">CPU</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <MemoryStick className="h-4 w-4 text-green-600" />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {metrics.memory_usage_mb.toFixed(1)}MB
+                      </div>
+                      <div className="text-xs text-gray-500">Memory</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <ExternalLink className="h-4 w-4 text-purple-600" />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {metrics.network_rx_mb.toFixed(1)}MB
+                      </div>
+                      <div className="text-xs text-gray-500">RX</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <ExternalLink className="h-4 w-4 text-orange-600" />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {metrics.network_tx_mb.toFixed(1)}MB
+                      </div>
+                      <div className="text-xs text-gray-500">TX</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {ports.length > 0 ? (
               <div className="space-y-2">
