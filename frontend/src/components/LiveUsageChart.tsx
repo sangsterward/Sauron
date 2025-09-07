@@ -39,8 +39,8 @@ const LiveUsageChart: React.FC<LiveUsageChartProps> = ({
       }
     }
 
-    // Get the last 20 data points for live view
-    const recentData = data.slice(-20)
+    // Get the last 20 data points for live view and reverse order (newest first)
+    const recentData = data.slice(-20).reverse()
     
     const labels = recentData.map((item) => {
       const date = new Date(item.timestamp)

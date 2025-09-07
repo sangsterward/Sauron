@@ -11,7 +11,7 @@ import { Activity, Wifi, WifiOff } from 'lucide-react'
 
 const Dashboard: React.FC = () => {
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useServiceStats()
-  const { data: serverMetrics, isLoading: metricsLoading, refetch: refetchServerMetrics } = useServerMetrics(1, false) // Disable auto-refresh
+  const { data: serverMetrics, isLoading: metricsLoading, refetch: refetchServerMetrics } = useServerMetrics(1, true) // Enable auto-refresh every 1 minute
   const { data: liveMetrics, isLoading: liveLoading, refetch: refetchLiveMetrics } = useLiveMetrics(false) // Disable auto-refresh
   const collectServerMetrics = useCollectServerMetrics()
   const [selectedService, setSelectedService] = useState<Service | null>(null)

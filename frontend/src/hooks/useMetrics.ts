@@ -10,7 +10,7 @@ export const useServerMetrics = (hours: number = 1, autoRefresh: boolean = false
       const response = await apiClient.get(`/monitoring/server_metrics/?hours=${hours}`)
       return response.data as ServerMetrics[]
     },
-    refetchInterval: autoRefresh ? 30000 : false, // Refetch every 30 seconds if autoRefresh enabled
+    refetchInterval: autoRefresh ? 60000 : false, // Refetch every 1 minute if autoRefresh enabled
   })
 }
 
